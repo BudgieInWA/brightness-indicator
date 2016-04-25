@@ -27,9 +27,9 @@ class BrightnessIndicator:
         # Build the menu.
         menu = gtk.Menu()
 
-        num_steps = 10
-        for step in range(num_steps, -1, -1):
-            level = step/float(num_steps)
+        num_steps = 5
+        for level in range(num_steps):
+            level = 1.0/pow(2, level)
             level_pc = round(level * 100)
             item_brightness = gtk.MenuItem(str(level_pc) + '%')
             item_brightness.brightness_level = level
