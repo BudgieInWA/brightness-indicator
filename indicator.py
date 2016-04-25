@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
+# Icons from http://www.flaticon.com/free-icons/brightness_644
+
 import os
 import signal
 import subprocess
 
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
-
-icon_dark   = os.path.abspath('dark.svg')
-icon_dim    = os.path.abspath('dim.svg')
-icon_bright = os.path.abspath('bright.svg')
 
 APPINDICATOR_ID = 'au.com.knightcode.brightness'
 
@@ -18,6 +16,10 @@ class BrightnessIndicator:
     def __init__(self):
         self.indicator = None
         self.level = None # We don't know what it is. (We could probably find out...)
+        
+        self.icon_dark   = os.path.abspath('dark.svg')
+        self.icon_dim    = os.path.abspath('dim.svg')
+        self.icon_bright = os.path.abspath('bright.svg')
 
         # Handle signals properly.
         signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -42,7 +44,7 @@ class BrightnessIndicator:
         menu.show_all()
 
         # Create the indicator
-        self.indicator= appindicator.Indicator.new(APPINDICATOR_ID, icon_dim, appindicator.IndicatorCategory.SYSTEM_SERVICES)
+        self.indicator= appindicator.Indicator.new(APPINDICATOR_ID, self.icon_bright, appindicator.IndicatorCategory.SYSTEM_SERVICES)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(menu)
 
@@ -63,11 +65,11 @@ class BrightnessIndicator:
     def update_icon(self):
         if self.indicator is not None and self.level is not None:
             if self.level >= 0.99:
-                self.indicator.set_icon(icon_bright)
+                self.indicator.set_icon(self.icon_bright)
             elif self.level > 0.3:
-                self.indicator.set_icon(icon_dim)
+                self.indicator.set_icon(self.icon_dim)
             else:
-                self.indicator.set_icon(icon_dark)
+                self.indicator.set_icon(self.icon_dark)
 
 def set_system_brightness(level):
     subprocess.call(['xrandr', '--output', 'eDP1', '--brightness', str(level)])
