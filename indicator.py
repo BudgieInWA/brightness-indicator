@@ -9,6 +9,7 @@ import subprocess
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 
+RESOURCE_DIR = os.path.dirname(__file__)
 APPINDICATOR_ID = 'au.com.knightcode.brightness'
 
 class BrightnessIndicator:
@@ -16,10 +17,12 @@ class BrightnessIndicator:
     def __init__(self):
         self.indicator = None
         self.level = None # We don't know what it is. (We could probably find out...)
-        
-        self.icon_dark   = os.path.abspath('dark.svg')
-        self.icon_dim    = os.path.abspath('dim.svg')
-        self.icon_bright = os.path.abspath('bright.svg')
+
+        self.icon_dark   = os.path.abspath(os.path.join(RESOURCE_DIR, 'dark.svg'))
+        self.icon_dim    = os.path.abspath(os.path.join(RESOURCE_DIR, 'dim.svg'))
+        self.icon_bright = os.path.abspath(os.path.join(RESOURCE_DIR, 'bright.svg'))
+
+        print(self.icon_bright)
 
         # Handle signals properly.
         signal.signal(signal.SIGINT, signal.SIG_DFL)
