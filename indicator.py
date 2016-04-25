@@ -7,54 +7,73 @@ import subprocess
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 
+icon_dark   = os.path.abspath('dark.svg')
+icon_dim    = os.path.abspath('dim.svg')
+icon_bright = os.path.abspath('bright.svg')
+
 APPINDICATOR_ID = 'au.com.knightcode.brightness'
 
-def main():
-    print("Icons designed by Freepik")
-    icon_dark   = os.path.abspath('dark.svg')
-    icon_dim    = os.path.abspath('dim.svg')
-    icon_bright = os.path.abspath('bright.svg')
+class BrightnessIndicator:
 
-    # Handle signals properly.
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    def __init__(self):
+        self.indicator = None
+        self.level = None # We don't know what it is. (We could probably find out...)
 
-    # Build the menu.
-    menu = gtk.Menu()
+        # Handle signals properly.
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    num_steps = 10
-    for step in range(num_steps, -1, -1):
-        level = step/float(num_steps)
-        level_pc = round(level * 100)
-        item_brightness = gtk.MenuItem(str(level_pc) + '%')
-        item_brightness.brightness_level = level
-        item_brightness.connect('activate', ev_set_brightness)
-        menu.append(item_brightness)
-    menu.append(gtk.SeparatorMenuItem())
+        # Build the menu.
+        menu = gtk.Menu()
 
-    item_quit = gtk.MenuItem('Quit')
-    item_quit.connect('activate', ev_quit)
-    menu.append(item_quit)
-    
-    menu.show_all()
+        num_steps = 10
+        for step in range(num_steps, -1, -1):
+            level = step/float(num_steps)
+            level_pc = round(level * 100)
+            item_brightness = gtk.MenuItem(str(level_pc) + '%')
+            item_brightness.brightness_level = level
+            item_brightness.connect('activate', self.ev_set_brightness)
+            menu.append(item_brightness)
+        menu.append(gtk.SeparatorMenuItem())
 
-    # Create the indicator
-    indicator = appindicator.Indicator.new(APPINDICATOR_ID, icon_dim, appindicator.IndicatorCategory.SYSTEM_SERVICES)
-    indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
-    indicator.set_menu(menu)
+        item_quit = gtk.MenuItem('Quit')
+        item_quit.connect('activate', self.ev_quit)
+        menu.append(item_quit)
+        
+        menu.show_all()
 
-    # Start the GTK loop.
-    gtk.main()
+        # Create the indicator
+        self.indicator= appindicator.Indicator.new(APPINDICATOR_ID, icon_dim, appindicator.IndicatorCategory.SYSTEM_SERVICES)
+        self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
+        self.indicator.set_menu(menu)
 
-def ev_quit(source):
-    """Stop everythin. For when the user wants to quit."""
-    gtk.main_quit()
+    def show(self):
+        print("Icons designed by Freepik")
+        gtk.main()
 
-def ev_set_brightness(source):
-    set_brightness(source.brightness_level)
+    def ev_quit(self, source):
+        """Stop everything. For when the user wants to quit."""
+        gtk.main_quit()
 
+    def ev_set_brightness(self, source):
+        set_system_brightness(source.brightness_level)
 
-def set_brightness(level):
+        self.level = source.brightness_level
+        self.update_icon()
+
+    def update_icon(self):
+        if self.indicator is not None and self.level is not None:
+            if self.level >= 0.99:
+                self.indicator.set_icon(icon_bright)
+            elif self.level > 0.3:
+                self.indicator.set_icon(icon_dim)
+            else:
+                self.indicator.set_icon(icon_dark)
+
+def set_system_brightness(level):
     subprocess.call(['xrandr', '--output', 'eDP1', '--brightness', str(level)])
+
+def main():
+    BrightnessIndicator().show()
 
 if __name__ == "__main__":
     main()
