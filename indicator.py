@@ -4,15 +4,50 @@ import os
 import re
 import signal
 import subprocess
+import sys
 
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 
 
-RESOURCE_DIR = os.path.dirname(__file__)
 APPINDICATOR_ID = 'au.com.knightcode.brightness'
+APP_NAME = 'Brightness Indicator'
+APP_DESCRIPTION = 'Change display brightness from the notification area'
+DESKTOP_FILE_TEMPLATE = """[Desktop Entry]
+Name={name}
+Comment={comment}
+Exec={exec}
+Type=Application
+"""
+
+RESOURCE_DIR = os.path.dirname(__file__)
+APP_EXEC = os.path.abspath(__file__)
+AUTOSTART_DIR = os.path.join(os.environ['HOME'], '.config/autostart/')
+AUTOSTART_FILE = os.path.join(AUTOSTART_DIR, 'indicator-brightness.desktop')
 
 BRIGHTNESS_STEPS = 5
+
+
+def check_autostart():
+    return os.path.exists(AUTOSTART_FILE)
+
+def create_autostart():
+    if check_autostart():
+        return
+    if not os.path.exists(AUTOSTART_DIR):
+        os.makedirs(AUTOSTART_DIR)
+    with open(AUTOSTART_FILE, "w") as file:     
+        file.write(DESKTOP_FILE_TEMPLATE.format(
+            name=APP_NAME,
+            comment=APP_DESCRIPTION,
+            exec=APP_EXEC,
+            ))
+
+def remove_autostart():
+    if not check_autostart():
+        return
+    os.remove(AUTOSTART_FILE)
+
 
 connected_device = re.compile('^([^ ]+) connected')
 def get_connected_displays():
@@ -85,6 +120,11 @@ class BrightnessIndicator:
         item_refresh.connect('activate', self.ev_detect_displays)
         self.menu.append(item_refresh)
 
+        item_autostart = gtk.CheckMenuItem('Run on Startup')
+        item_autostart.connect('toggled', self.ev_toggle_autostart)
+        item_autostart.set_active(check_autostart())
+        self.menu.append(item_autostart)
+
         item_quit = gtk.MenuItem('Quit')
         item_quit.connect('activate', self.ev_quit)
         self.menu.append(item_quit)
@@ -118,6 +158,13 @@ class BrightnessIndicator:
 
         self.menu.show_all()
 
+    def ev_toggle_autostart(self, source):
+        if source.get_active():
+            create_autostart()
+        else:
+            remove_autostart()
+        source.set_active(check_autostart())
+
     def show(self):
         gtk.main()
 
@@ -133,6 +180,7 @@ class BrightnessIndicator:
                 self.indicator.set_icon(self.icon_dim)
             else:
                 self.indicator.set_icon(self.icon_dark)
+
 
 def main():
     BrightnessIndicator().show()
