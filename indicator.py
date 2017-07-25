@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# Icons from http://www.flaticon.com/free-icons/brightness_644
-
 import os
 import signal
 import subprocess
@@ -52,7 +50,6 @@ class BrightnessIndicator:
         self.indicator.set_menu(menu)
 
     def show(self):
-        print("Icons designed by Freepik")
         gtk.main()
 
     def ev_quit(self, source):
